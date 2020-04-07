@@ -4,8 +4,6 @@ import javafx.scene.layout.Pane;
 import javafx.scene.paint.Color;
 import javafx.scene.shape.Circle;
 
-import java.time.Duration;
-import java.time.Instant;
 import java.util.Random;
 
 public class Person {
@@ -16,8 +14,9 @@ public class Person {
     private boolean recovered = false;
 
     public int id;
+    public static int PERSON_SIZE = 4;
 
-    public long timeToDeath;
+    public long timeOfInfection;
     private long chanceOfDeath;
 
     private long start;
@@ -27,27 +26,27 @@ public class Person {
     private Pane pane;
 
     public Circle circle;
-    public Vect position = new Vect(this);
+    public Vect positionVector = new Vect(this);
 
     private Random r = new Random();
 
     public Person(double x, double y) {
-        position.x = x;
-        position.y = y;
+        positionVector.x = x;
+        positionVector.y = y;
     }
 
     public Person(double x, double y, Pane pane) {
         this.pane = pane;
-        position.x = x;
-        position.y = y;
+        positionVector.x = x;
+        positionVector.y = y;
 
         init();
     }
 
     public Person(double mag, double x, double y, Pane pane) {
-        position.mag = mag;
-        position.x = x;
-        position.y = y;
+        positionVector.mag = mag;
+        positionVector.x = x;
+        positionVector.y = y;
         this.pane = pane;
 
         init();
@@ -59,10 +58,26 @@ public class Person {
 
         init();
 
-        position.mag = mag;
-        position.dirAngle = dirAngle;
-        position.x = x;
-        position.y = y;
+        positionVector.mag = mag;
+        positionVector.dirAngle = dirAngle;
+        positionVector.x = x;
+        positionVector.y = y;
+    }
+
+    //GETTERS AND SETTERS///////////////////////////////////////////////////////////////////////////////////////////////
+    public boolean isINFECTED() {
+        return INFECTED;
+    }
+
+    /**
+     * sets the person's infected boolean
+     * and starts the time of infection timer
+     *
+     * @param INFECTED
+     */
+    public void setINFECTED(boolean INFECTED) {
+        this.INFECTED = INFECTED;
+        start = Main.timePassed;
     }
 
     public boolean isDead() {
@@ -73,16 +88,6 @@ public class Person {
         this.dead = dead;
     }
 
-    public boolean isINFECTED() {
-        return INFECTED;
-    }
-
-    public void setINFECTED(boolean INFECTED) {
-        this.INFECTED = INFECTED;
-
-        start = Main.timePassed;
-    }
-
     public boolean isRecovered() {
         return recovered;
     }
@@ -91,49 +96,69 @@ public class Person {
         this.recovered = recovered;
     }
 
-    //getters and setters
     public Pane getPane() {
         return pane;
     }
+
     public void setPane(Pane pane) {
         this.pane = pane;
     }
+
     public double getMag() {
-        return position.mag;
+        return positionVector.mag;
     }
+
     public void setMag(double mag) {
-        position.mag = mag;
+        positionVector.mag = mag;
     }
+
     public double getX() {
-        return position.x;
+        return positionVector.x;
     }
+
     public void setX(double x) {
-        position.x = x;
+        positionVector.x = x;
     }
+
     public double getY() {
-        return position.y;
+        return positionVector.y;
     }
+
     public void setY(double y) {
-        position.y = y;
+        positionVector.y = y;
     }
+
     public double getDirAngle() {
-        return position.dirAngle;
+        return positionVector.dirAngle;
     }
+
     public void setDirAngle(double dirAngle) {
-        position.dirAngle = dirAngle;
+        positionVector.dirAngle = dirAngle;
     }
+    ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
     //code that runs when the class is initialized
     private void init() {
-        position = new Vect(this);
-        circle = new Circle(position.x, position.y, 10);
+        positionVector = new Vect(this);
+        circle = new Circle(positionVector.x, positionVector.y, PERSON_SIZE);
         circle.setFill(Color.GREEN);
         pane.getChildren().add(circle);
 
-        timeToDeath = randomI(Ligma.MIN_INFECTION_TIME,Ligma.MAX_INFECTION_TIME) * 1000;
+        setRandomValues();
+    }
+
+    //sets the time to death
+    //sets the chance of death
+    private void setRandomValues() {
+        timeOfInfection = randomI(Ligma.MIN_INFECTION_TIME, Ligma.MAX_INFECTION_TIME) * 1000;
         chanceOfDeath = r.nextInt(100);
     }
 
+    /**
+     * @param rangeMin
+     * @param rangeMax
+     * @return a random integer between the min and max range
+     */
     private int randomI(int rangeMin, int rangeMax) {
         if (rangeMin >= rangeMax) {
             throw new IllegalArgumentException("max must be greater than min");
@@ -143,47 +168,63 @@ public class Person {
         return r.nextInt((rangeMax - rangeMin) + 1) + rangeMin;
     }
 
-    //draws the person
+    //draws and updates the person's location
+    public void update() {
+
+        draw();
+
+        circle.setCenterX(positionVector.x);
+        circle.setCenterY(positionVector.y);
+    }
+
     public void draw() {
 
         if (INFECTED) {
             circle.setFill(Color.YELLOW);
-            finish = Main.timePassed;
 
+            //sets the elapsed time
+            finish = Main.timePassed;
             elapsedTime += finish - start;
 
+            //boolean used to count the total cases
             WAS_OR_IS_INFECTED = true;
 
-            //after a certain amount of time either the person recovers or dies
-            if((elapsedTime) >= timeToDeath && chanceOfDeath <= Ligma.MORTALITY_RATE) {
-                die();
-            } else if(chanceOfDeath > Ligma.MORTALITY_RATE && (elapsedTime) >= timeToDeath ) {
+            /*
 
+            after a certain period of time, the person either dies or recovers
+             */
+
+            //if the period of infection is over and their chance of death is within the mortality rate
+            // the person will die
+            if ((elapsedTime) >= timeOfInfection && chanceOfDeath <= Ligma.MORTALITY_RATE) {
+                dead = true;
+                circle.setFill(Color.RED);
+
+              // if the period of infection is over and their chance of death is not within the mortality rate
+              // the person recovers from the disease and is no longer infected
+            } else if (chanceOfDeath > Ligma.MORTALITY_RATE && (elapsedTime) >= timeOfInfection) {
                 INFECTED = false;
                 recovered = true;
             }
-            //System.out.println(System.currentTimeMillis() - startingTime);
-        } else if(!dead && recovered){
+
+          // if the person is alive and recovered set the color to purple
+        } else if (!dead && recovered) {
             circle.setFill(Color.web("6E54C9"));
+
+          // if the person is alive and not come into contact with the disease
+          // set color to green
         } else {
             circle.setFill(Color.GREEN);
         }
-
-        circle.setCenterX(position.x);
-        circle.setCenterY(position.y);
     }
 
+    // tells the vector to randomly change direction
     public void randomMovement() {
-        position.randomMovement();
+        positionVector.randomMovement();
     }
 
     public void moveTowards(Vect mouse) {
-        position.moveTowards(mouse);
-    }
-
-    public void die() {
-        dead = true;
-        circle.setFill(Color.RED);
+        positionVector.moveTowards(mouse);
     }
 
 }

@@ -9,14 +9,12 @@ import javafx.animation.AnimationTimer;
 import javafx.application.Application;
 import javafx.event.EventHandler;
 import javafx.scene.Scene;
-import javafx.scene.canvas.GraphicsContext;
 import javafx.scene.control.ScrollPane;
 import javafx.scene.input.MouseEvent;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.Pane;
 import javafx.scene.layout.VBox;
 import javafx.scene.paint.Color;
-import javafx.scene.shape.Circle;
 import javafx.stage.Stage;
 
 import java.util.Random;
@@ -38,17 +36,14 @@ public class Main extends Application {
 
     public static int STAGE_WIDTH = 800;
     public static int STAGE_HEIGHT = 700;
-    public static int POPULATION_COUNT = 200;
+
+    //population recommended to be less than 3000
+    public static int POPULATION_COUNT = 1000;
 
     public static Person[] population = new Person[POPULATION_COUNT];
 
     private Stage stage;
     private Scene scene;
-
-    double angle = 0;
-
-    private int[] c1 = {100, 100};
-    private int[] c2 = {200, 200};
 
     public int dead;
     public int infected;
@@ -56,46 +51,21 @@ public class Main extends Application {
     public int healthy;
     public int totalCases;
 
-    private Circle circle;
     private Graph graph;
 
-    /////////////////////////////////////
-    private double x = 100;
-    private double y = 100;
-
-    private GraphicsContext gc;
-    /////////////////////////////////////
-    private boolean running = true;
+    private boolean SIMULATION_RUNNING = true;
 
     private String title = "Disease Spread simulation";
 
     public void start(Stage primaryStage) {
         this.stage = primaryStage;
 
-        HBox window = new HBox();
+        stage.setResizable(false);
 
-        simulation = new Pane();
-        simulation.setMaxWidth(600);
-        simulation.setMinWidth(600);
-        simulation.setStyle("-fx-background-color: black;");
+        //holds the simulation and the control panel
+        loadGui();
 
-        VBox rightSide = new VBox();
-
-        controlPanel = new Pane();
-        controls = new Panel(this, controlPanel);
-
-        ScrollPane graphPane = new ScrollPane();
-        graph = new Graph(this, graphPane);
-
-        rightSide.getChildren().add(controlPanel);
-        rightSide.getChildren().add(graphPane);
-
-        window.getChildren().add(simulation);
-        window.getChildren().add(rightSide);
-
-        scene = new Scene(window, STAGE_WIDTH, STAGE_HEIGHT);
-
-        initialize();
+        initializeSimulation();
 
         startTicking();
 
@@ -104,33 +74,35 @@ public class Main extends Application {
         primaryStage.show();
     }
 
-    private void startTicking() {
+    public void loadGui() {
+        HBox window = new HBox();
 
-        new AnimationTimer() {
-            long lastTick = 0;
+        simulation = new Pane();
+        simulation.setMaxWidth(600);
+        simulation.setMinWidth(600);
+        simulation.setStyle("-fx-background-color: black;");
 
-            //TIMER
-            public void handle(long now) {
-                if (running == true) {
-                    stage.setScene(scene);
+        //holds the control panel and the graph
+        VBox rightSide = new VBox();
 
-                    if (lastTick == 0) {
-                        lastTick = now;
-                        tick();
+        //control panel
+        controlPanel = new Pane();
+        controls = new Panel(controlPanel);
 
-                        return;
-                    }
+        //graph
+        ScrollPane graphPane = new ScrollPane();
+        graph = new Graph(graphPane);
 
-                    if (now - lastTick > 1000000000 / 60) {
-                        lastTick = now;
-                        tick();
-                    }
-                }
-            }
-        }.start();
+        rightSide.getChildren().add(controlPanel);
+        rightSide.getChildren().add(graphPane);
+
+        window.getChildren().add(simulation);
+        window.getChildren().add(rightSide);
+
+        scene = new Scene(window, STAGE_WIDTH, STAGE_HEIGHT);
     }
 
-    public void initialize() {
+    public void initializeSimulation() {
 
         //creates new people and adds them to the population
         for (int i = 0; i < population.length; i++) {
@@ -147,8 +119,34 @@ public class Main extends Application {
                 population[i] = infected;
             }
         }
+    }
 
-        //temp
+    private void startTicking() {
+
+        new AnimationTimer() {
+            long lastTick = 0;
+
+            //TIMER
+            public void handle(long now) {
+                if (SIMULATION_RUNNING == true) {
+                    stage.setScene(scene);
+
+                    if (lastTick == 0) {
+                        lastTick = now;
+                        tick();
+
+                        return;
+                    }
+
+                    if (now - lastTick > 1000000000 / 60) {
+                        lastTick = now;
+                        tick();
+                    }
+                }
+            }
+        }.start();
+
+        //mouse event
         simulation.addEventFilter(MouseEvent.MOUSE_DRAGGED, new EventHandler<MouseEvent>() {
             @Override
             public void handle(MouseEvent event) {
@@ -182,7 +180,7 @@ public class Main extends Application {
         for (int i = 0; i < population.length; i++) {
 
             population[i].setMag(controls.speedMeter.getValue());
-            population[i].draw();
+            population[i].update();
             population[i].randomMovement();
             if (population[i].isINFECTED()) {
                 infectedc++;

@@ -98,10 +98,10 @@ public class Vect {
         ArrayList<Person> list = new ArrayList();
 
         for (Person c : Main.population) {
-            if(c.position.x > x - Ligma.INFECTION_RANGE
-                    && c.position.x < x + Ligma.INFECTION_RANGE
-                    && c.position.y > y - Ligma.INFECTION_RANGE
-                    && c.position.y < y + Ligma.INFECTION_RANGE
+            if(c.positionVector.x > x - Ligma.INFECTION_RANGE
+                    && c.positionVector.x < x + Ligma.INFECTION_RANGE
+                    && c.positionVector.y > y - Ligma.INFECTION_RANGE
+                    && c.positionVector.y < y + Ligma.INFECTION_RANGE
                     && !c.equals(this))
             {
                 list.add(c);

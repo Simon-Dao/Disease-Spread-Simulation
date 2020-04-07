@@ -29,26 +29,27 @@ public class Panel {
 
     public Button resetButton;
 
-    public int healthy;
-    public int recovered;
-    public int infected;
-    public int dead;
-
     public Slider speedMeter;
-    public Slider graphMeter;
 
-    private Main main;
     private Random r = new Random();
 
-    public Panel(Main main, Pane layout) {
-        this.layout = layout;
-        this.main   = main;
-        loadGui();
+    //TODO add a mortality, infectious range and infectivity and min and max infection times
 
+    /**
+     *
+     * @param layout the pane that holds the panel
+     */
+    public Panel(Pane layout) {
+        this.layout = layout;
+
+        //prevents the pane from expanding randomly
         layout.setMaxHeight(450);
         layout.setMinHeight(450);
+
+        loadGui();
     }
 
+    //sets the data for the panel
     public void setInfectedCount(int count) {
         infectedCount.setText(String.valueOf(count));
     }
@@ -131,6 +132,7 @@ public class Panel {
                     Graph.currentInfectedStats.clear();
                 }
 
+                //set the 1st person in the list as infected
                 Main.population[0].setINFECTED(true);
                 Main.population[0].setRecovered(false);
                 Main.population[0].setDead(false);
@@ -147,6 +149,7 @@ public class Panel {
         speedMeter.setMin(0);
         speedMeter.setMax(2.5);
 
+        //add all the nodes into the pane
         layout.getChildren().add(infectedText);
         layout.getChildren().add(infectedCount);
         layout.getChildren().add(healthyText);
